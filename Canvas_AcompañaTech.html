@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo Canvas — AcompañaTech</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #06080f;
+    --bg2: #0d1220;
+    --surface: #131a2e;
+    --border: rgba(255,255,255,0.06);
+    --text: #f1f5f9;
+    --text-muted: #b0bec5;
+    --text-dim: #8b9ab8;
+    --how-1: #00e676; --how-bg: rgba(0,230,118,0.06); --how-border: rgba(0,230,118,0.2); --how-glow: rgba(0,230,118,0.18); --how-grad: linear-gradient(135deg, #00e676, #00bfa5);
+    --what-1: #e040fb; --what-bg: rgba(224,64,251,0.07); --what-border: rgba(224,64,251,0.25); --what-glow: rgba(224,64,251,0.22); --what-grad: linear-gradient(135deg, #e040fb, #7c4dff);
+    --who-1: #ffab00; --who-bg: rgba(255,171,0,0.06); --who-border: rgba(255,171,0,0.2); --who-glow: rgba(255,171,0,0.18); --who-grad: linear-gradient(135deg, #ffab00, #ff6d00);
+    --cost-1: #ff5252; --cost-bg: rgba(255,82,82,0.06); --cost-border: rgba(255,82,82,0.2); --cost-glow: rgba(255,82,82,0.18); --cost-grad: linear-gradient(135deg, #ff5252, #ff1744);
+    --rev-1: #40c4ff; --rev-bg: rgba(64,196,255,0.06); --rev-border: rgba(64,196,255,0.2); --rev-glow: rgba(64,196,255,0.18); --rev-grad: linear-gradient(135deg, #40c4ff, #00b0ff);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== ANIMATED BG ===== */
+  .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(100px); animation: orbDrift 22s ease-in-out infinite; }
+  .orb:nth-child(1) { width: 600px; height: 600px; top: -15%; left: -8%; background: rgba(224,64,251,0.22); animation-delay: 0s; }
+  .orb:nth-child(2) { width: 500px; height: 500px; top: 40%; right: -10%; background: rgba(0,230,118,0.18); animation-delay: -5s; }
+  .orb:nth-child(3) { width: 450px; height: 450px; bottom: -10%; left: 25%; background: rgba(255,171,0,0.16); animation-delay: -10s; }
+  .orb:nth-child(4) { width: 350px; height: 350px; top: 15%; left: 55%; background: rgba(64,196,255,0.13); animation-delay: -7s; }
+  .orb:nth-child(5) { width: 400px; height: 400px; bottom: 10%; right: 15%; background: rgba(255,82,82,0.14); animation-delay: -15s; }
+  .orb:nth-child(6) { width: 300px; height: 300px; top: 60%; left: 10%; background: rgba(124,77,255,0.12); animation-delay: -3s; }
+
+  @keyframes orbDrift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(40px, -50px) scale(1.08); }
+    50% { transform: translate(-30px, 30px) scale(0.93); }
+    75% { transform: translate(20px, 40px) scale(1.04); }
+  }
+
+  .bg-dots { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 30px 30px; }
+
+  /* ===== FLOATING STICKERS (Genially-style) ===== */
+  .floating-stickers {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+
+  .float-sticker {
+    position: absolute;
+    font-size: 1.8rem;
+    opacity: 0.12;
+    filter: blur(0.3px);
+    animation: stickerFloat 18s ease-in-out infinite;
+  }
+
+  .float-sticker:nth-child(1) { top: 8%; left: 5%; animation-delay: 0s; font-size: 2.2rem; }
+  .float-sticker:nth-child(2) { top: 15%; right: 8%; animation-delay: -3s; font-size: 1.6rem; }
+  .float-sticker:nth-child(3) { top: 35%; left: 3%; animation-delay: -6s; }
+  .float-sticker:nth-child(4) { top: 55%; right: 4%; animation-delay: -9s; font-size: 2rem; }
+  .float-sticker:nth-child(5) { top: 70%; left: 7%; animation-delay: -12s; font-size: 1.4rem; }
+  .float-sticker:nth-child(6) { top: 85%; right: 6%; animation-delay: -15s; }
+  .float-sticker:nth-child(7) { top: 25%; left: 92%; animation-delay: -2s; font-size: 1.5rem; }
+  .float-sticker:nth-child(8) { top: 45%; left: 95%; animation-delay: -8s; font-size: 1.3rem; }
+  .float-sticker:nth-child(9) { top: 5%; left: 50%; animation-delay: -4s; font-size: 1.4rem; }
+  .float-sticker:nth-child(10) { top: 90%; left: 45%; animation-delay: -11s; font-size: 1.6rem; }
+
+  @keyframes stickerFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    20% { transform: translate(12px, -18px) rotate(8deg) scale(1.1); }
+    40% { transform: translate(-8px, 14px) rotate(-5deg) scale(0.95); }
+    60% { transform: translate(15px, 8px) rotate(12deg) scale(1.08); }
+    80% { transform: translate(-10px, -12px) rotate(-8deg) scale(0.98); }
+  }
+
+  /* ===== SPARKLE PARTICLES ===== */
+  .sparkles {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+
+  .sparkle {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    animation: sparkleAnim linear infinite;
+  }
+
+  @keyframes sparkleAnim {
+    0% { transform: translateY(0) scale(0); opacity: 0; }
+    15% { opacity: 1; transform: translateY(-30px) scale(1); }
+    50% { opacity: 0.6; }
+    100% { transform: translateY(-200px) scale(0); opacity: 0; }
+  }
+
+  /* ===== HERO ===== */
+  .hero { position: relative; z-index: 1; text-align: center; padding: 2.8rem 1.5rem 1.2rem; }
+
+  /* Hero floating emojis */
+  .hero-floats {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  }
+
+  .hero-float-em {
+    position: absolute;
+    font-size: 2.4rem;
+    opacity: 0;
+    animation: heroEmojiFloat 3s ease-in-out infinite;
+  }
+
+  .hero-float-em:nth-child(1) { left: 8%; top: 20%; animation-delay: 0s; }
+  .hero-float-em:nth-child(2) { right: 8%; top: 15%; animation-delay: 0.5s; }
+  .hero-float-em:nth-child(3) { left: 15%; bottom: 10%; animation-delay: 1s; }
+  .hero-float-em:nth-child(4) { right: 15%; bottom: 15%; animation-delay: 1.5s; }
+  .hero-float-em:nth-child(5) { left: 3%; top: 55%; animation-delay: 0.7s; }
+  .hero-float-em:nth-child(6) { right: 3%; top: 50%; animation-delay: 1.2s; }
+
+  @keyframes heroEmojiFloat {
+    0%, 100% { opacity: 0; transform: translateY(15px) scale(0.7) rotate(-10deg); }
+    20% { opacity: 0.7; transform: translateY(-5px) scale(1.1) rotate(5deg); }
+    50% { opacity: 0.5; transform: translateY(-15px) scale(1) rotate(0deg); }
+    80% { opacity: 0.6; transform: translateY(-8px) scale(1.05) rotate(-3deg); }
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 1.2rem; border-radius: 100px;
+    background: linear-gradient(135deg, rgba(224,64,251,0.12), rgba(124,77,255,0.12));
+    border: 1px solid rgba(224,64,251,0.28);
+    font-size: 0.8rem; font-weight: 700; color: #ce93d8;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    margin-bottom: 1rem;
+    animation: fadeUp 0.5s ease;
+  }
+
+  .hero-badge .dot {
+    width: 7px; height: 7px;
+    background: linear-gradient(135deg, #e040fb, #7c4dff);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(224,64,251,0.6);
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .hero-team {
+    font-size: 0.85rem; color: var(--text-dim); font-weight: 500;
+    letter-spacing: 0.03em; margin-bottom: 0.8rem;
+    animation: fadeUp 0.5s ease 0.03s both;
+  }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800; letter-spacing: -0.04em; line-height: 1.05;
+    animation: fadeUp 0.5s ease 0.06s both;
+  }
+
+  .hero h1 .gr {
+    background: linear-gradient(135deg, #e040fb 0%, #7c4dff 20%, #40c4ff 40%, #00e676 60%, #ffab00 80%, #ff5252 100%);
+    background-size: 300% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: shimmer 5s linear infinite;
+  }
+
+  @keyframes shimmer { 0% { background-position: 0% center; } 100% { background-position: 300% center; } }
+
+  .hero .tagline {
+    margin-top: 0.7rem; animation: fadeUp 0.5s ease 0.12s both;
+  }
+
+  .hero .tagline q {
+    font-size: clamp(1rem, 2.3vw, 1.3rem);
+    font-weight: 700; font-style: italic;
+    background: linear-gradient(90deg, #e040fb, #7c4dff, #40c4ff, #00e676);
+    background-size: 300% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: shimmer 6s linear infinite;
+    quotes: "\201C" "\201D";
+  }
+
+  .hero p {
+    max-width: 550px; margin: 0.5rem auto 0;
+    color: var(--text-muted); font-size: 1.05rem; line-height: 1.6;
+    animation: fadeUp 0.5s ease 0.18s both;
+  }
+
+  .hero-stats {
+    display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+    margin-top: 1.3rem; animation: fadeUp 0.5s ease 0.24s both;
+  }
+
+  .hero-stat .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.9rem; font-weight: 800;
+  }
+
+  .hero-stat:nth-child(1) .num { color: #e040fb; }
+  .hero-stat:nth-child(2) .num { color: #40c4ff; }
+  .hero-stat:nth-child(3) .num { color: #00e676; }
+
+  .hero-stat .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+
+  /* Animated hero illustration */
+  .hero-illustration {
+    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    margin: 1.2rem auto 0; width: 120px; height: 60px;
+    animation: fadeUp 0.5s ease 0.3s both;
+  }
+
+  .hero-illustration .hi-emoji {
+    font-size: 2.5rem;
+    animation: hiBounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(224,64,251,0.3));
+  }
+
+  .hero-illustration .hi-ring {
+    position: absolute;
+    width: 80px; height: 80px;
+    border: 2px solid rgba(224,64,251,0.15);
+    border-radius: 50%;
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+
+  .hero-illustration .hi-ring:nth-child(2) { width: 110px; height: 110px; animation-delay: -1s; border-color: rgba(64,196,255,0.1); }
+  .hero-illustration .hi-ring:nth-child(3) { width: 140px; height: 140px; animation-delay: -2s; border-color: rgba(0,230,118,0.08); }
+
+  @keyframes hiBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(0.9); opacity: 0.4; }
+    50% { transform: scale(1.1); opacity: 0.1; }
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== PILLS ===== */
+  .pills {
+    display: flex; justify-content: center; gap: 0.45rem; flex-wrap: wrap;
+    margin: 0.8rem auto 1.3rem; padding: 0 1rem;
+    animation: fadeUp 0.5s ease 0.35s both;
+  }
+
+  .pill {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.35rem 0.9rem; border-radius: 100px;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
+    cursor: default; transition: all 0.3s ease;
+  }
+
+  .pill:hover { transform: translateY(-2px) scale(1.05); }
+
+  .pill.how { background: var(--how-bg); border: 1px solid var(--how-border); color: var(--how-1); }
+  .pill.what { background: var(--what-bg); border: 1px solid var(--what-border); color: var(--what-1); }
+  .pill.who { background: var(--who-bg); border: 1px solid var(--who-border); color: var(--who-1); }
+  .pill.cost { background: var(--cost-bg); border: 1px solid var(--cost-border); color: var(--cost-1); }
+  .pill.rev { background: var(--rev-bg); border: 1px solid var(--rev-border); color: var(--rev-1); }
+
+  .pdot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 6px currentColor; background: currentColor; }
+
+  /* ===== CANVAS GRID ===== */
+  .wrap { position: relative; z-index: 1; max-width: 1260px; margin: 0 auto; padding: 0 0.6rem 2.5rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr auto;
+    gap: 5px;
+  }
+
+  .c[data-s="8"] { grid-column: 1; grid-row: 1 / 3; }
+  .c[data-s="7"] { grid-column: 2; grid-row: 1; }
+  .c[data-s="6"] { grid-column: 2; grid-row: 2; }
+  .c[data-s="2"] { grid-column: 3; grid-row: 1 / 3; }
+  .c[data-s="4"] { grid-column: 4; grid-row: 1; }
+  .c[data-s="3"] { grid-column: 4; grid-row: 2; }
+  .c[data-s="1"] { grid-column: 5; grid-row: 1 / 3; }
+  .c[data-s="9"] { grid-column: 1 / 4; grid-row: 3; }
+  .c[data-s="5"] { grid-column: 4 / 6; grid-row: 3; }
+
+  /* ===== CARD BASE ===== */
+  .c {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 0.8rem; position: relative;
+    overflow: hidden; cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: cardIn 0.5s ease both;
+  }
+
+  .c::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; border-radius: 14px 14px 0 0; transition: height 0.3s;
+  }
+
+  .c::after {
+    content: ''; position: absolute; inset: 0; border-radius: 14px;
+    opacity: 0; transition: opacity 0.4s; pointer-events: none;
+  }
+
+  .c:hover { transform: translateY(-3px); border-color: transparent; }
+  .c:hover::before { height: 4px; }
+  .c:hover::after { opacity: 1; }
+
+  /* Card animated sticker */
+  .card-sticker {
+    position: absolute;
+    top: 0.45rem; right: 2rem;
+    font-size: 1.4rem;
+    opacity: 0.18;
+    animation: cardStickerBounce 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.4s, transform 0.4s;
+  }
+
+  .c:hover .card-sticker {
+    opacity: 0.5;
+    transform: scale(1.25) rotate(10deg);
+    animation: cardStickerPop 0.6s ease-out;
+  }
+
+  @keyframes cardStickerBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-4px) rotate(5deg); }
+    50% { transform: translateY(-2px) rotate(-3deg); }
+    75% { transform: translateY(-5px) rotate(3deg); }
+  }
+
+  @keyframes cardStickerPop {
+    0% { transform: scale(1) rotate(0deg); }
+    40% { transform: scale(1.5) rotate(15deg); }
+    70% { transform: scale(1.15) rotate(-5deg); }
+    100% { transform: scale(1.25) rotate(10deg); }
+  }
+
+  /* Color classes */
+  .c.how::before { background: var(--how-grad); }
+  .c.how:hover { box-shadow: 0 8px 40px var(--how-glow), 0 0 0 1px var(--how-border); }
+  .c.how::after { background: radial-gradient(ellipse at top, rgba(0,230,118,0.05), transparent 70%); }
+  .c.how .cn { background: var(--how-grad); color: #000; }
+  .c.how .cq { color: var(--how-1); }
+  .c.how .ci li::before { background: var(--how-1); box-shadow: 0 0 5px rgba(0,230,118,0.5); }
+
+  .c.what::before { background: var(--what-grad); }
+  .c.what:hover { box-shadow: 0 8px 40px var(--what-glow), 0 0 0 1px var(--what-border); }
+  .c.what::after { background: radial-gradient(ellipse at top, rgba(224,64,251,0.06), transparent 70%); }
+  .c.what .cn { background: var(--what-grad); color: #fff; }
+  .c.what .cq { color: var(--what-1); }
+  .c.what .ci li::before { background: var(--what-1); box-shadow: 0 0 5px rgba(224,64,251,0.5); }
+
+  .c.who::before { background: var(--who-grad); }
+  .c.who:hover { box-shadow: 0 8px 40px var(--who-glow), 0 0 0 1px var(--who-border); }
+  .c.who::after { background: radial-gradient(ellipse at top, rgba(255,171,0,0.05), transparent 70%); }
+  .c.who .cn { background: var(--who-grad); color: #000; }
+  .c.who .cq { color: var(--who-1); }
+  .c.who .ci li::before { background: var(--who-1); box-shadow: 0 0 5px rgba(255,171,0,0.5); }
+
+  .c.cost::before { background: var(--cost-grad); }
+  .c.cost:hover { box-shadow: 0 8px 40px var(--cost-glow), 0 0 0 1px var(--cost-border); }
+  .c.cost::after { background: radial-gradient(ellipse at top, rgba(255,82,82,0.05), transparent 70%); }
+  .c.cost .cn { background: var(--cost-grad); color: #fff; }
+  .c.cost .cq { color: var(--cost-1); }
+  .c.cost .ci li::before { background: var(--cost-1); box-shadow: 0 0 5px rgba(255,82,82,0.5); }
+
+  .c.rev::before { background: var(--rev-grad); }
+  .c.rev:hover { box-shadow: 0 8px 40px var(--rev-glow), 0 0 0 1px var(--rev-border); }
+  .c.rev::after { background: radial-gradient(ellipse at top, rgba(64,196,255,0.05), transparent 70%); }
+  .c.rev .cn { background: var(--rev-grad); color: #000; }
+  .c.rev .cq { color: var(--rev-1); }
+  .c.rev .ci li::before { background: var(--rev-1); box-shadow: 0 0 5px rgba(64,196,255,0.5); }
+
+  .ch { display: flex; align-items: flex-start; gap: 0.4rem; margin-bottom: 0.35rem; }
+
+  .cn {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 800; font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .ct { font-family: 'Space Grotesk', sans-serif; font-size: 0.92rem; font-weight: 700; line-height: 1.2; }
+
+  .cq { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+
+  .ci { list-style: none; }
+  .ci li { position: relative; padding-left: 0.8rem; margin-bottom: 0.3rem; font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+  .ci li::before { content: ''; position: absolute; left: 0; top: 0.35em; width: 4px; height: 4px; border-radius: 50%; }
+  .c:hover .ci li { color: var(--text); }
+
+  .cex {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    width: 20px; height: 20px; border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.25; transition: all 0.25s;
+    z-index: 3;
+  }
+  .c:hover .cex { opacity: 1; background: rgba(255,255,255,0.08); }
+  .cex svg { width: 10px; height: 10px; stroke: var(--text-muted); stroke-width: 2.5; fill: none; }
+
+  /* ===== PROPUESTA DE VALOR - SPECIAL CARD ===== */
+  .c[data-s="2"] {
+    background: linear-gradient(170deg, #131a2e 0%, rgba(224,64,251,0.06) 40%, rgba(124,77,255,0.08) 100%);
+    border: 1px solid rgba(224,64,251,0.18);
+  }
+
+  .c[data-s="2"] .card-slogan {
+    margin: 0.4rem 0 0.6rem;
+    padding: 0.6rem 0.7rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(224,64,251,0.1), rgba(124,77,255,0.12));
+    border: 1px solid rgba(224,64,251,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .c[data-s="2"] .card-slogan::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+    animation: sloganShine 4s ease-in-out infinite;
+  }
+
+  @keyframes sloganShine {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+
+  .c[data-s="2"] .card-slogan .slogan-icon {
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.25rem;
+    animation: sloganIconPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes sloganIconPulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.15); filter: brightness(1.3); }
+  }
+
+  .c[data-s="2"] .card-slogan .slogan-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-style: italic;
+    line-height: 1.3;
+    background: linear-gradient(90deg, #e040fb, #ce93d8, #b388ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .c[data-s="2"] .card-sticker {
+    font-size: 1.8rem;
+    opacity: 0.22;
+    animation: diamondSpin 4s ease-in-out infinite;
+  }
+
+  @keyframes diamondSpin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(10deg) scale(1.1); }
+    50% { transform: rotate(-5deg) scale(1.15); }
+    75% { transform: rotate(8deg) scale(1.05); }
+  }
+
+  .c[data-s="2"]:hover {
+    box-shadow: 0 0 60px rgba(224,64,251,0.2), 0 8px 40px var(--what-glow), 0 0 0 1px var(--what-border);
+  }
+
+  .c[data-s="2"]:hover .card-sticker {
+    animation: diamondPopHover 0.8s ease-out forwards;
+    opacity: 0.6;
+  }
+
+  @keyframes diamondPopHover {
+    0% { transform: rotate(0deg) scale(1); }
+    30% { transform: rotate(20deg) scale(1.6); }
+    60% { transform: rotate(-10deg) scale(1.3); }
+    100% { transform: rotate(5deg) scale(1.35); }
+  }
+
+  /* Card animation stagger */
+  .c:nth-child(1) { animation-delay: 0.03s; }
+  .c:nth-child(2) { animation-delay: 0.06s; }
+  .c:nth-child(3) { animation-delay: 0.09s; }
+  .c:nth-child(4) { animation-delay: 0.12s; }
+  .c:nth-child(5) { animation-delay: 0.15s; }
+  .c:nth-child(6) { animation-delay: 0.18s; }
+  .c:nth-child(7) { animation-delay: 0.21s; }
+  .c:nth-child(8) { animation-delay: 0.24s; }
+  .c:nth-child(9) { animation-delay: 0.27s; }
+
+  @keyframes cardIn { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  /* ===== DETAIL OVERLAY ===== */
+  .ov {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.78);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    align-items: center; justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+  }
+  .ov.active { display: flex; }
+
+  .dt {
+    background: var(--bg2); border-radius: 22px; border: 1px solid var(--border);
+    max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto;
+    position: relative; animation: dtIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes dtIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+  .dt-hero { position: relative; padding: 1.6rem 1.8rem 1rem; overflow: hidden; }
+  .dt-hero::before { content: ''; position: absolute; inset: 0; opacity: 0.07; }
+  .dt-hero::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+
+  .dt.how .dt-hero::before { background: var(--how-grad); }
+  .dt.what .dt-hero::before { background: var(--what-grad); }
+  .dt.who .dt-hero::before { background: var(--who-grad); }
+  .dt.cost .dt-hero::before { background: var(--cost-grad); }
+  .dt.rev .dt-hero::before { background: var(--rev-grad); }
+
+  /* Detail animated illustration */
+  .dt-illustration {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.6rem;
+    z-index: 1;
+  }
+
+  .dt-illustration .dt-em {
+    font-size: 3rem;
+    animation: dtEmojiBounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 6px 20px rgba(0,0,0,0.4));
+    position: relative;
+    z-index: 2;
+  }
+
+  .dt-illustration .dt-ring1,
+  .dt-illustration .dt-ring2,
+  .dt-illustration .dt-ring3 {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid;
+    opacity: 0.2;
+  }
+
+  .dt-illustration .dt-ring1 { width: 65px; height: 65px; animation: dtRing 3s ease-in-out infinite; }
+  .dt-illustration .dt-ring2 { width: 90px; height: 90px; animation: dtRing 3s ease-in-out infinite -1s; }
+  .dt-illustration .dt-ring3 { width: 115px; height: 115px; animation: dtRing 3s ease-in-out infinite -2s; }
+
+  .dt.how .dt-illustration .dt-ring1,
+  .dt.how .dt-illustration .dt-ring2,
+  .dt.how .dt-illustration .dt-ring3 { border-color: var(--how-1); }
+  .dt.what .dt-illustration .dt-ring1,
+  .dt.what .dt-illustration .dt-ring2,
+  .dt.what .dt-illustration .dt-ring3 { border-color: var(--what-1); }
+  .dt.who .dt-illustration .dt-ring1,
+  .dt.who .dt-illustration .dt-ring2,
+  .dt.who .dt-illustration .dt-ring3 { border-color: var(--who-1); }
+  .dt.cost .dt-illustration .dt-ring1,
+  .dt.cost .dt-illustration .dt-ring2,
+  .dt.cost .dt-illustration .dt-ring3 { border-color: var(--cost-1); }
+  .dt.rev .dt-illustration .dt-ring1,
+  .dt.rev .dt-illustration .dt-ring2,
+  .dt.rev .dt-illustration .dt-ring3 { border-color: var(--rev-1); }
+
+  @keyframes dtEmojiBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-8px) scale(1.08); }
+    60% { transform: translateY(-3px) scale(1.03); }
+  }
+
+  @keyframes dtRing {
+    0%, 100% { transform: scale(0.85); opacity: 0.25; }
+    50% { transform: scale(1.1); opacity: 0.08; }
+  }
+
+  /* Detail floating mini stickers */
+  .dt-floaters {
+    position: absolute;
+    top: 0; right: 0; width: 150px; height: 100%;
+    pointer-events: none; overflow: hidden; z-index: 1;
+  }
+
+  .dt-floater {
+    position: absolute;
+    font-size: 1.3rem;
+    opacity: 0.15;
+    animation: dtFloaterAnim 5s ease-in-out infinite;
+  }
+
+  .dt-floater:nth-child(1) { top: 15%; right: 15%; animation-delay: 0s; }
+  .dt-floater:nth-child(2) { top: 45%; right: 25%; animation-delay: -1.5s; font-size: 1rem; }
+  .dt-floater:nth-child(3) { top: 70%; right: 10%; animation-delay: -3s; font-size: 1.1rem; }
+
+  @keyframes dtFloaterAnim {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.15; }
+    33% { transform: translate(-8px, -10px) rotate(10deg); opacity: 0.25; }
+    66% { transform: translate(5px, 6px) rotate(-8deg); opacity: 0.12; }
+  }
+
+  .dt-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.8rem; font-weight: 800; line-height: 1.1; position: relative; z-index: 1;
+  }
+
+  .dt-q {
+    font-size: 0.9rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; margin-top: 0.25rem; position: relative; z-index: 1;
+  }
+
+  .dt.how .dt-q { color: var(--how-1); }
+  .dt.what .dt-q { color: var(--what-1); }
+  .dt.who .dt-q { color: var(--who-1); }
+  .dt.cost .dt-q { color: var(--cost-1); }
+  .dt.rev .dt-q { color: var(--rev-1); }
+
+  .dt-summary {
+    font-size: 1rem; color: var(--text-muted); line-height: 1.55;
+    margin-top: 0.6rem; position: relative; z-index: 1;
+  }
+
+  /* Slogan banner inside detail for propuesta de valor */
+  .dt-slogan-banner {
+    position: relative; z-index: 1;
+    margin-top: 0.8rem; padding: 0.8rem 1rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(224,64,251,0.12), rgba(124,77,255,0.15));
+    border: 1px solid rgba(224,64,251,0.25);
+    overflow: hidden;
+  }
+
+  .dt-slogan-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    animation: sloganShine 4s ease-in-out infinite;
+  }
+
+  .dt-slogan-banner p {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem; font-weight: 700; font-style: italic;
+    text-align: center; position: relative; z-index: 1;
+    background: linear-gradient(90deg, #e040fb, #b388ff, #40c4ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  .dt-close {
+    position: absolute; top: 1rem; right: 1rem; z-index: 2;
+    width: 34px; height: 34px; border-radius: 11px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.25s;
+    color: var(--text-muted); font-size: 1.2rem;
+  }
+  .dt-close:hover { background: rgba(255,255,255,0.12); color: var(--text); transform: rotate(90deg); }
+
+  .dt-body { padding: 0.2rem 1.8rem 1.8rem; }
+
+  .dt-item {
+    display: flex; gap: 0.8rem; padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.035);
+    transition: all 0.2s;
+    animation: dtItemIn 0.4s ease both;
+  }
+  .dt-item:nth-child(1) { animation-delay: 0.05s; }
+  .dt-item:nth-child(2) { animation-delay: 0.1s; }
+  .dt-item:nth-child(3) { animation-delay: 0.15s; }
+  .dt-item:nth-child(4) { animation-delay: 0.2s; }
+  .dt-item:nth-child(5) { animation-delay: 0.25s; }
+  .dt-item:nth-child(6) { animation-delay: 0.3s; }
+  .dt-item:nth-child(7) { animation-delay: 0.35s; }
+  .dt-item:nth-child(8) { animation-delay: 0.4s; }
+
+  @keyframes dtItemIn {
+    from { opacity: 0; transform: translateX(-15px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .dt-item:last-child { border-bottom: none; }
+  .dt-item:hover { padding-left: 0.3rem; }
+
+  .dt-ic {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+    transition: transform 0.3s;
+  }
+
+  .dt-item:hover .dt-ic {
+    transform: scale(1.15) rotate(5deg);
+  }
+
+  .dt.how .dt-ic { background: var(--how-bg); border: 1px solid var(--how-border); }
+  .dt.what .dt-ic { background: var(--what-bg); border: 1px solid var(--what-border); }
+  .dt.who .dt-ic { background: var(--who-bg); border: 1px solid var(--who-border); }
+  .dt.cost .dt-ic { background: var(--cost-bg); border: 1px solid var(--cost-border); }
+  .dt.rev .dt-ic { background: var(--rev-bg); border: 1px solid var(--rev-border); }
+
+  .dt-item-c { flex: 1; }
+  .dt-item-c strong { display: block; color: var(--text); font-weight: 600; font-size: 1.02rem; margin-bottom: 0.1rem; }
+  .dt-item-c .sub { font-size: 0.92rem; color: var(--text-dim); line-height: 1.5; }
+
+  /* ===== FOOTER ===== */
+  .foot {
+    position: relative; z-index: 1; text-align: center; padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .foot .logo {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.3rem;
+    background: linear-gradient(135deg, #e040fb, #7c4dff, #40c4ff, #00e676, #ffab00, #ff5252);
+    background-size: 300% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: shimmer 5s linear infinite;
+    margin-bottom: 0.25rem;
+  }
+
+  .foot p { color: var(--text-dim); font-size: 0.82rem; }
+
+  .foot-emojis {
+    margin-top: 0.6rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    font-size: 1.2rem;
+  }
+
+  .foot-emojis span {
+    display: inline-block;
+    animation: footEmBounce 2s ease-in-out infinite;
+  }
+
+  .foot-emojis span:nth-child(1) { animation-delay: 0s; }
+  .foot-emojis span:nth-child(2) { animation-delay: 0.2s; }
+  .foot-emojis span:nth-child(3) { animation-delay: 0.4s; }
+  .foot-emojis span:nth-child(4) { animation-delay: 0.6s; }
+  .foot-emojis span:nth-child(5) { animation-delay: 0.8s; }
+
+  @keyframes footEmBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1050px) {
+    .grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; gap: 8px; }
+    .c[data-s="2"] { grid-column: 1 / 3; order: 1; }
+    .c[data-s="8"] { grid-column: 1; order: 2; }
+    .c[data-s="7"] { grid-column: 2; order: 3; }
+    .c[data-s="6"] { grid-column: 1; order: 4; }
+    .c[data-s="1"] { grid-column: 2; order: 5; }
+    .c[data-s="4"] { grid-column: 1; order: 6; }
+    .c[data-s="3"] { grid-column: 2; order: 7; }
+    .c[data-s="9"] { grid-column: 1 / 3; order: 8; }
+    .c[data-s="5"] { grid-column: 1 / 3; order: 9; }
+    .c { min-height: 150px; }
+    .c[data-s="2"] .card-slogan .slogan-text { font-size: 0.95rem; }
+    .hero-float-em { font-size: 1.8rem; }
+  }
+
+  @media (max-width: 620px) {
+    .grid { grid-template-columns: 1fr; gap: 10px; }
+    .c[data-s="2"], .c[data-s="8"], .c[data-s="7"], .c[data-s="6"],
+    .c[data-s="1"], .c[data-s="4"], .c[data-s="3"], .c[data-s="9"],
+    .c[data-s="5"] { grid-column: 1; }
+    .hero { padding: 2rem 1rem 1rem; }
+    .hero h1 { font-size: 2.1rem; }
+    .hero p { max-width: 100%; font-size: 0.85rem; }
+    .c { min-height: auto; padding: 0.9rem; }
+    .ct { font-size: 0.95rem; }
+    .ci li { font-size: 0.88rem; }
+    .cex { opacity: 0.4; }
+    .card-sticker { opacity: 0.25; font-size: 1.2rem; }
+    .ov { padding: 0.5rem; }
+    .dt { border-radius: 16px; }
+    .dt-hero { padding: 1.3rem 1.2rem 0.8rem; }
+    .dt-body { padding: 0.2rem 1.2rem 1.4rem; }
+    .dt-close { top: 0.7rem; right: 0.7rem; }
+    .dt-slogan-banner p { font-size: 1rem; }
+    .hero-float-em { font-size: 1.4rem; opacity: 0.5; }
+    .float-sticker { display: none; }
+    .sparkles { display: none; }
+    .orb { opacity: 0.15; }
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+<div class="bg-dots"></div>
+
+<!-- Floating stickers (Genially-style background emojis) -->
+<div class="floating-stickers">
+  <div class="float-sticker">💻</div>
+  <div class="float-sticker">📱</div>
+  <div class="float-sticker">👴</div>
+  <div class="float-sticker">❤️</div>
+  <div class="float-sticker">🌐</div>
+  <div class="float-sticker">🎓</div>
+  <div class="float-sticker">🤝</div>
+  <div class="float-sticker">📈</div>
+  <div class="float-sticker">💎</div>
+  <div class="float-sticker">🏠</div>
+</div>
+
+<!-- Sparkle particles (generated by JS) -->
+<div class="sparkles" id="sparkles"></div>
+
+<header class="hero">
+  <!-- Floating hero emojis -->
+  <div class="hero-floats">
+    <div class="hero-float-em">💻</div>
+    <div class="hero-float-em">📱</div>
+    <div class="hero-float-em">👨‍👩‍👧</div>
+    <div class="hero-float-em">🌟</div>
+    <div class="hero-float-em">👴</div>
+    <div class="hero-float-em">❤️</div>
+  </div>
+
+  <div class="hero-badge"><span class="dot"></span> Grupo 1 — Emprendedurismo</div>
+  <div class="hero-team">Isaac Alemán · Anthony Mata · Pamela Sibaja · Yariel Soto · Catalina Valverde</div>
+  <h1>Modelo <span class="gr">Canvas</span></h1>
+  <div class="tagline"><q>Venza el miedo a la tecnología y vuelva a sentirse independiente.</q></div>
+  <p>Acompañamiento tecnológico personalizado para adultos mayores que buscan recuperar su independencia digital con confianza</p>
+
+  <!-- Animated hero illustration -->
+  <div class="hero-illustration">
+    <div class="hi-ring"></div>
+    <div class="hi-ring"></div>
+    <div class="hi-ring"></div>
+    <div class="hi-emoji">👵💻</div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">9</div><div class="label">Bloques</div></div>
+    <div class="hero-stat"><div class="num">4</div><div class="label">Meses / Programa</div></div>
+    <div class="hero-stat"><div class="num">100%</div><div class="label">Personalizado</div></div>
+  </div>
+</header>
+
+<div class="pills">
+  <div class="pill how"><span class="pdot"></span> ¿Cómo?</div>
+  <div class="pill what"><span class="pdot"></span> ¿Qué?</div>
+  <div class="pill who"><span class="pdot"></span> ¿Quién?</div>
+  <div class="pill cost"><span class="pdot"></span> Costos</div>
+  <div class="pill rev"><span class="pdot"></span> Ingresos</div>
+</div>
+
+<main class="wrap"><div class="grid" id="g"></div></main>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeD()">
+  <div class="dt" id="dt"></div>
+</div>
+
+<footer class="foot">
+  <div class="logo">AcompañaTech</div>
+  <p>Isaac Alemán · Anthony Mata · Pamela Sibaja · Yariel Soto · Catalina Valverde</p>
+  <p>Modelo Canvas — Grupo 1 — Emprendedurismo — Marzo 2026</p>
+  <div class="foot-emojis">
+    <span>💻</span>
+    <span>❤️</span>
+    <span>👴</span>
+    <span>🌟</span>
+    <span>📱</span>
+  </div>
+</footer>
+
+<script>
+// ===== SPARKLE PARTICLE GENERATOR =====
+(function() {
+  const container = document.getElementById('sparkles');
+  const colors = ['#e040fb', '#7c4dff', '#40c4ff', '#00e676', '#ffab00', '#ff5252'];
+  const count = 25;
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = (40 + Math.random() * 60) + '%';
+    s.style.background = colors[Math.floor(Math.random() * colors.length)];
+    s.style.boxShadow = `0 0 6px ${s.style.background}`;
+    s.style.animationDuration = (4 + Math.random() * 8) + 's';
+    s.style.animationDelay = (Math.random() * 10) + 's';
+    s.style.width = (2 + Math.random() * 4) + 'px';
+    s.style.height = s.style.width;
+    container.appendChild(s);
+  }
+})();
+
+// ===== CARD DATA =====
+const D = [
+  {
+    s: 8, cat: "how", t: "Asociaciones Clave", q: "¿Quién te ayuda?", em: "🤝", sticker: "🤝",
+    floaters: ["🏛️", "🎓", "💻"],
+    sum: "Red de aliados estratégicos que potencian nuestra capacidad de servicio, reducen costos y amplían el alcance del acompañamiento tecnológico a más adultos mayores.",
+    items: [
+      { ic: "💻", m: "Proveedores de tecnología", sub: "Tablets, laptops y accesorios adaptados (pantallas grandes, letras visibles). Negociación por volumen para reducir la inversión inicial." },
+      { ic: "📡", m: "Proveedores de conectividad", sub: "Servicios de Internet y routers portátiles para garantizar conexión estable en cualquier ubicación donde demos sesiones." },
+      { ic: "🏛️", m: "Salones comunales y centros comunitarios", sub: "Alianzas estratégicas para espacios accesibles y de bajo costo. Reducen significativamente el gasto de alquiler." },
+      { ic: "🏠", m: "Centros y hogares de adulto mayor", sub: "Canal de referencia directa de clientes. Generan confianza institucional y acceso a grupos organizados." },
+      { ic: "🎓", m: "Capacitadores especializados en adultos mayores", sub: "Profesionales con experiencia en andragogía, paciencia y metodologías adaptadas al ritmo de aprendizaje." },
+      { ic: "🏛️", m: "Municipalidades y programas de inclusión digital", sub: "Alianzas con gobierno local para programas sociales, subsidios y acceso a espacios públicos gratuitos." }
+    ]
+  },
+  {
+    s: 7, cat: "how", t: "Actividades Clave", q: "¿Qué haces?", em: "⚙️", sticker: "⚙️",
+    floaters: ["📱", "📖", "📊"],
+    sum: "Las actividades esenciales que ejecutamos para entregar valor real: desde la capacitación personalizada hasta el seguimiento continuo del progreso de cada participante.",
+    items: [
+      { ic: "📱", m: "Capacitación tecnológica personalizada", sub: "Sesiones uno a uno o en grupos pequeños, adaptadas al nivel de cada adulto mayor. Desde encender el dispositivo hasta hacer videollamadas." },
+      { ic: "🛠️", m: "Soporte técnico presencial y remoto", sub: "Asistencia para resolver problemas del día a día: configuraciones, actualizaciones, conexión WiFi, uso de aplicaciones." },
+      { ic: "📖", m: "Creación de material didáctico", sub: "Guías paso a paso con capturas de pantalla grandes, manuales impresos en letra legible, tutoriales en video con explicación pausada." },
+      { ic: "📊", m: "Seguimiento y evaluación del progreso", sub: "Registro del avance individual, identificación de dificultades, ajuste personalizado del programa según cada necesidad." },
+      { ic: "📋", m: "Diseño y actualización de programas", sub: "Desarrollo continuo del currículo de 4 meses: módulos desde lo básico hasta banca en línea y redes sociales." }
+    ]
+  },
+  {
+    s: 6, cat: "how", t: "Recursos Clave", q: "¿Qué tienes?", em: "🔑", sticker: "🔑",
+    floaters: ["💻", "📶", "👨‍🏫"],
+    sum: "Los recursos indispensables para operar: equipos tecnológicos, software educativo, conectividad móvil y sobre todo, el talento humano capacitado que hace posible cada sesión.",
+    items: [
+      { ic: "💻", m: "Tablets y laptops para sesiones", sub: "Equipos para préstamo durante sesiones. Configuración simplificada, letras grandes, apps preinstaladas y fáciles de usar." },
+      { ic: "📶", m: "Router portátil y VPN", sub: "Conectividad móvil segura para sesiones a domicilio. Internet estable donde sea que vayamos." },
+      { ic: "🖥️", m: "Software y plataformas educativas", sub: "Herramientas interactivas adaptadas al adulto mayor. Plataforma de videollamadas para soporte remoto." },
+      { ic: "📚", m: "Material didáctico impreso y digital", sub: "Guías con tipografía grande, manuales con capturas de pantalla, fichas de ejercicios prácticos para reforzar en casa." },
+      { ic: "👨‍🏫", m: "Personal capacitado y empático", sub: "Técnicos de acompañamiento con formación en educación para adultos, con vocación de servicio y mucha paciencia." }
+    ]
+  },
+  {
+    s: 2, cat: "what", t: "Propuesta de Valor", q: "¿Qué ofreces?", em: "💎", sticker: "💎",
+    slogan: "Venza el miedo a la tecnología y vuelva a sentirse independiente.",
+    floaters: ["🌟", "❤️", "✨"],
+    sum: "No solo enseñamos a usar dispositivos: acompañamos con paciencia, empatía y un programa integral diseñado para que el adulto mayor recupere su autonomía digital y vuelva a conectarse con el mundo.",
+    items: [
+      { ic: "🌟", m: "Acompañamiento, no solo capacitación", sub: "No somos un curso: somos un acompañante de confianza. Caminamos junto al adulto mayor a su propio ritmo, sin presiones ni tecnicismos confusos." },
+      { ic: "📅", m: "Programa integral de 4 meses", sub: "Currículo estructurado que va desde lo más básico (encender y apagar) hasta independencia digital completa (videollamadas con la familia, banca, redes)." },
+      { ic: "🏠", m: "Sesiones presenciales a domicilio", sub: "Llegamos a la comodidad del hogar. Sin desplazamientos estresantes, en el espacio seguro del adulto mayor." },
+      { ic: "💻", m: "Soporte remoto siempre disponible", sub: "Para consultas rápidas. El adulto mayor sabe que siempre tiene a alguien a quien llamar si algo no funciona." },
+      { ic: "🤝", m: "Sesiones grupales en comunidad", sub: "Espacios donde adultos mayores comparten experiencias, se motivan mutuamente y aprenden en un ambiente social y amigable." },
+      { ic: "📖", m: "Material didáctico adaptado", sub: "Guías claras con letra grande, capturas de pantalla y pasos numerados. Para que puedan consultarlas solos después de cada sesión." },
+      { ic: "❤️", m: "Paciencia, empatía y confianza", sub: "El corazón de AcompañaTech. Entendemos los miedos y frustraciones. Cada logro del adulto mayor, por pequeño que sea, es nuestro logro." },
+      { ic: "🌐", m: "Reducción real de la brecha digital", sub: "Impacto social tangible: adultos mayores que vuelven a comunicarse con sus familias, hacen trámites solos y se sienten parte del mundo." }
+    ]
+  },
+  {
+    s: 4, cat: "who", t: "Relación con Clientes", q: "¿Cómo te relacionas?", em: "💬", sticker: "💬",
+    floaters: ["🫂", "📞", "😊"],
+    sum: "Relaciones de largo plazo basadas en confianza y cercanía. El adulto mayor nunca se siente solo frente a la tecnología porque siempre tiene nuestro acompañamiento.",
+    items: [
+      { ic: "🫂", m: "Acompañamiento personalizado", sub: "Conocemos su nombre, sus miedos, sus metas. No es un número, es una persona que merece atención individual." },
+      { ic: "📞", m: "Soporte remoto siempre disponible", sub: "Línea de atención para dudas rápidas por llamada, WhatsApp o videollamada. Respuesta ágil y en lenguaje sencillo." },
+      { ic: "📈", m: "Reportes de progreso a las familias", sub: "Informamos qué aprendió, qué le cuesta, qué sigue. Genera tranquilidad y confianza en quienes contratan el servicio." },
+      { ic: "😊", m: "Trato cercano y empático", sub: "Confianza con paciencia, buen humor y celebrando cada pequeño logro. Desde desbloquear el celular hasta hacer su primera videollamada." },
+      { ic: "🔄", m: "Seguimiento post-programa", sub: "Al terminar los 4 meses mantenemos contacto. Ofrecemos módulos avanzados para quienes quieran seguir aprendiendo." }
+    ]
+  },
+  {
+    s: 3, cat: "who", t: "Canales", q: "¿Cómo te conocen?", em: "📢", sticker: "📢",
+    floaters: ["🏠", "📱", "🗣️"],
+    sum: "Combinamos canales físicos y digitales para llegar a los adultos mayores y a sus familias, que muchas veces son quienes buscan y contratan el servicio.",
+    items: [
+      { ic: "🏠", m: "Sesiones a domicilio", sub: "Canal principal de entrega. Llegamos al hogar con todo el equipo necesario para una sesión completa." },
+      { ic: "🏛️", m: "Salones comunales", sub: "Sesiones grupales en espacios conocidos, de fácil acceso y cómodos para el adulto mayor." },
+      { ic: "💻", m: "Plataforma de soporte remoto", sub: "Videollamadas de seguimiento, soporte técnico y consultas rápidas desde la comodidad del hogar." },
+      { ic: "📱", m: "Redes sociales (Facebook e Instagram)", sub: "Contenido dirigido a hijos y nietos que buscan soluciones digitales para sus seres queridos mayores." },
+      { ic: "🗣️", m: "Boca a boca y referencias", sub: "El canal más poderoso: recomendaciones de clientes satisfechos, familias agradecidas y centros aliados." },
+      { ic: "📋", m: "Convenios con centros de adulto mayor", sub: "Nos recomiendan directamente a sus afiliados. Canal de acceso directo y con alta credibilidad." }
+    ]
+  },
+  {
+    s: 1, cat: "who", t: "Segmentos de Clientes", q: "¿A quién ayudas?", em: "👥", sticker: "👥",
+    floaters: ["👴", "👨‍👩‍👧", "🏛️"],
+    sum: "Nuestros clientes son los adultos mayores que reciben el servicio y las familias que lo contratan. La decisión de compra muchas veces viene de los hijos o nietos preocupados.",
+    items: [
+      { ic: "👴", m: "Adultos mayores sin experiencia digital", sub: "Nunca usaron un smartphone o tablet, o lo intentaron con frustración. Sienten miedo o vergüenza de no poder aprender." },
+      { ic: "👨‍👩‍👧", m: "Familias que buscan autonomía para sus mayores", sub: "Hijos y nietos preocupados porque su familiar no puede hacer videollamadas, trámites en línea, o se siente aislado." },
+      { ic: "❤️", m: "Adultos mayores que valoran el trato humano", sub: "Ya intentaron cursos genéricos que iban muy rápido. Necesitan acompañamiento paciente, a su ritmo, sin presiones." },
+      { ic: "🏛️", m: "Centros y hogares de adulto mayor", sub: "Instituciones que buscan programas de inclusión digital como valor agregado para sus residentes o afiliados." }
+    ]
+  },
+  {
+    s: 9, cat: "cost", t: "Estructura de Costos", q: "¿Cuánto te cuesta?", em: "💰", sticker: "💰",
+    floaters: ["💻", "👨‍🏫", "🚗"],
+    sum: "Los costos se distribuyen por hora de sesión como unidad básica de costeo (prorrateo). Cada gasto mensual se divide entre el total de horas productivas para obtener el costo real.",
+    items: [
+      { ic: "💻", m: "Depreciación de equipos tecnológicos", sub: "Tablets, laptops y accesorios. Se deprecian mes a mes y se distribuyen entre las horas de sesión productivas." },
+      { ic: "📶", m: "Conectividad mensual", sub: "Internet de oficina, router portátil, VPN. Costo fijo mensual prorrateado por hora de trabajo." },
+      { ic: "👨‍🏫", m: "Honorarios del equipo", sub: "Técnicos de acompañamiento, coordinador de operaciones, asistente administrativo. Salarios + cargas sociales (~35%)." },
+      { ic: "🏛️", m: "Alquiler de espacio", sub: "Coworking o salón comunal según la estrategia. Reducible con alianzas comunitarias y municipales." },
+      { ic: "🖥️", m: "Software y licencias educativas", sub: "Plataformas de aprendizaje, herramientas de soporte remoto y gestión administrativa." },
+      { ic: "🚗", m: "Transporte a domicilio", sub: "Combustible y traslado. Costo variable según cantidad de sesiones a domicilio vs. grupales." },
+      { ic: "📣", m: "Publicidad y material didáctico", sub: "Redes sociales, impresión de guías y manuales, papelería. Inversión en captación de clientes." },
+      { ic: "👤", m: "Salario de los socios fundadores", sub: "Reserva dentro del precio para que los fundadores puedan vivir del negocio. ¡No olvidar nunca este rubro!" }
+    ]
+  },
+  {
+    s: 5, cat: "rev", t: "Fuentes de Ingresos", q: "¿Qué obtienes?", em: "📈", sticker: "📈",
+    floaters: ["📦", "⏰", "🔄"],
+    sum: "La unidad básica de cobro es la hora de sesión. Los programas y paquetes se construyen sobre esa base, dando flexibilidad para escalar el negocio según la demanda.",
+    items: [
+      { ic: "📦", m: "Programa completo de 4 meses", sub: "Paquete integral con sesiones semanales definidas. Precio = total de horas × costo por hora + margen de ganancia." },
+      { ic: "⏰", m: "Sesiones individuales por hora", sub: "Para clientes puntuales: configurar un dispositivo, aprender una app específica, resolver un problema técnico." },
+      { ic: "👥", m: "Paquetes grupales en comunidad", sub: "Sesiones colectivas en salones comunales. Menor precio por persona pero mayor volumen = más rentabilidad." },
+      { ic: "📞", m: "Soporte técnico remoto premium", sub: "Servicio adicional de asistencia por videollamada para egresados del programa que quieran mantener acompañamiento." },
+      { ic: "🔄", m: "Módulos avanzados post-programa", sub: "Para graduados: banca en línea, redes sociales avanzadas, compras online. Genera ingresos recurrentes y fidelización." }
+    ]
+  }
+];
+
+// ===== RENDER CARDS =====
+const g = document.getElementById('g');
+D.forEach(b => {
+  const c = document.createElement('div');
+  c.className = `c ${b.cat}`;
+  c.dataset.s = b.s;
+  c.onclick = () => openD(b);
+
+  const sloganHTML = b.slogan ? `
+    <div class="card-slogan">
+      <span class="slogan-icon">💎</span>
+      <span class="slogan-text">"${b.slogan}"</span>
+    </div>` : '';
+
+  c.innerHTML = `
+    <div class="card-sticker">${b.sticker}</div>
+    <div class="cex"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+    <div class="ch"><div class="cn">${b.s}</div><div class="ct">${b.t}</div></div>
+    <div class="cq">${b.q}</div>
+    ${sloganHTML}
+    <ul class="ci">${b.items.map(i => `<li>${i.m}</li>`).join('')}</ul>
+  `;
+  g.appendChild(c);
+});
+
+// ===== DETAIL OVERLAY =====
+function openD(b) {
+  const o = document.getElementById('ov');
+  const d = document.getElementById('dt');
+  d.className = `dt ${b.cat}`;
+
+  const sloganBanner = b.slogan ? `
+    <div class="dt-slogan-banner">
+      <p>💎 "${b.slogan}"</p>
+    </div>` : '';
+
+  const floatersHTML = b.floaters ? b.floaters.map(f => `<div class="dt-floater">${f}</div>`).join('') : '';
+
+  d.innerHTML = `
+    <button class="dt-close" onclick="closeD()">&times;</button>
+    <div class="dt-hero">
+      <div class="dt-floaters">${floatersHTML}</div>
+      <div class="dt-illustration">
+        <div class="dt-ring1"></div>
+        <div class="dt-ring2"></div>
+        <div class="dt-ring3"></div>
+        <div class="dt-em">${b.em}</div>
+      </div>
+      <div class="dt-title">${b.t}</div>
+      <div class="dt-q">${b.q}</div>
+      <div class="dt-summary">${b.sum}</div>
+      ${sloganBanner}
+    </div>
+    <div class="dt-body">
+      ${b.items.map(i => `
+        <div class="dt-item">
+          <div class="dt-ic">${i.ic}</div>
+          <div class="dt-item-c">
+            <strong>${i.m}</strong>
+            <span class="sub">${i.sub}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  o.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeD() {
+  document.getElementById('ov').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeD(); });
+</script>
+</body>
+</html>
